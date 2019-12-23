@@ -8,6 +8,12 @@ export const COLORS = {
   blue: 0x68c3c0
 };
 
+export const DIRECTIONS = Object.freeze({
+  DOWN: "DOWN",
+  LEFT: "LEFT",
+  RIGHT: "RIGHT"
+});
+
 export const normalize = (v, vmin, vmax, tmin, tmax) => {
   var nv = Math.max(Math.min(v, vmax), vmin);
   var dv = vmax - vmin;
@@ -24,5 +30,6 @@ export const ARCH_HEIGHT = 30;
 export default {
   COLORS,
   normalize,
-  CUBE_WIDTH
+  CUBE_WIDTH,
+  DIRECTIONS
 };

@@ -1,8 +1,14 @@
 import * as THREE from "three";
 import LineShape from "./shapes/LineShape";
-import { ARCH_HEIGHT, ARCH_WIDTH, CUBE_WIDTH } from "../utils";
+import { ARCH_HEIGHT, ARCH_WIDTH, CUBE_WIDTH, DIRECTIONS } from "../utils";
 import Scene from "./Scene";
 import Arch from "./Arch";
+
+const KEY_CODES = Object.freeze({
+  LEFT: 106,
+  RIGHT: 108,
+  DOWN: 107
+});
 
 class Game {
   constructor() {
@@ -14,7 +20,18 @@ class Game {
     this.fallInterval = null;
     this.createArch();
     this.initializeSlotsMatrix();
+    this.listenToKeypress();
     this.generateShape();
+  }
+
+  listenToKeypress() {
+    window.addEventListener("keypress", e => {
+      if (e.keyCode === KEY_CODES.LEFT) {
+        this.moveActiveShapeX(DIRECTIONS.LEFT);
+      } else if (e.keyCode === KEY_CODES.RIGHT) {
+        this.moveActiveShapeX(DIRECTIONS.RIGHT);
+      }
+    });
   }
 
   generateShape() {
@@ -30,21 +47,21 @@ class Game {
 
   createArch() {
     this.arch = new Arch(ARCH_WIDTH, ARCH_HEIGHT);
-    this.arch.mesh.position.x = CUBE_WIDTH / 2;
+    this.arch.mesh.position.x = (-ARCH_WIDTH * CUBE_WIDTH) / 2 + CUBE_WIDTH / 2;
     this.arch.mesh.position.y = CUBE_WIDTH / 2;
     this.scene.addToScene(this.arch.mesh);
   }
 
-  moveShapeX(xDirection) {
-    this.activeShape.moveX(xDirection);
+  moveActiveShapeX(dir) {
+    this.activeShape.moveX(dir, this.arch.mesh.position, this.slotsMatrix);
   }
 
   initializeSlotsMatrix() {
     const slotsMatrix = [];
-    for (let i = 0; i < ARCH_WIDTH - 1; i++) {
+    for (let i = 0; i < ARCH_WIDTH - 2; i++) {
       const row = [];
-      for (let j = 0; j < ARCH_HEIGHT - 1; j++) {
-        row.push(0);
+      for (let j = 0; j < ARCH_HEIGHT + 4; j++) {
+        row.push(1);
       }
       slotsMatrix.push(row);
     }
@@ -60,17 +77,19 @@ class Game {
       if (s.y > ARCH_HEIGHT - 1) {
         canContinue = false;
       }
-      this.slotsMatrix[s.x][s.y] = 1;
+      this.slotsMatrix[s.x][s.y] = 0;
     });
     return canContinue;
   }
 
   activeShapeFall() {
-    const canGoDown = this.activeShape.canGoDown(
+    const canGoDown = this.activeShape.canGo(
+      DIRECTIONS.DOWN,
       this.arch.mesh.position,
       this.slotsMatrix
     );
-    if (canGoDown && this.activeShape.mesh.position.y > CUBE_WIDTH * 1.5) {
+
+    if (canGoDown) {
       this.activeShape.mesh.position.y -= CUBE_WIDTH;
     } else {
       clearInterval(this.fallInterval);
